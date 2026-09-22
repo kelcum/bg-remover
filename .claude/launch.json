@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "bg-remover",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["serve.py", "8743"],
+      "port": 8743
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Background Remover</title>
+<link rel="stylesheet" href="style.css">
+<script src="coi-serviceworker.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "onnxruntime-web": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0-dev.20250206-d981b153d3/dist/ort.bundle.min.mjs",
+    "onnxruntime-web/webgpu": "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0-dev.20250206-d981b153d3/dist/ort.webgpu.bundle.min.mjs"
+  }
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Background Remover</h1>
+    <p class="tagline">Drop an image or GIF in. It comes out with the background gone, saved as a transparent GIF (or PNG). Everything runs on your machine — nothing is uploaded anywhere.</p>
+  </header>
+
+  <main>
+    <label id="dropzone" for="fileInput">
+      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" hidden>
+      <div class="dz-inner">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+        <div><strong>Click to choose a file</strong> or drag one here</div>
+        <div class="dz-hint">PNG, JPG, WEBP, BMP, or GIF (animated GIFs are processed frame by frame)</div>
+      </div>
+    </label>
+
+    <section id="options" class="panel" hidden>
+      <div class="opt-row">
+        <label for="quality">Quality
+          <select id="quality">
+            <option value="isnet_quint8" selected>Fast (smaller download, quicker per frame)</option>
+            <option value="isnet_fp16">Balanced</option>
+            <option value="isnet">Best (slowest)</option>
+          </select>
+        </label>
+        <label for="format">Save as
+          <select id="format">
+            <option value="gif" selected>GIF (transparent, matches your example)</option>
+            <option value="png">PNG (smoother edges, static images only)</option>
+          </select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="gpu" checked>
+          Use GPU acceleration when available
+        </label>
+      </div>
+      <div class="opt-row" id="thresholdRow">
+        <label for="threshold" class="slider-label">
+          Edge cutoff
+          <span id="thresholdVal">128</span>
+        </label>
+        <input type="range" id="threshold" min="1" max="254" value="128">
+        <div class="dz-hint">GIF transparency is all-or-nothing per pixel (no soft edges). Lower this if too much of the subject is disappearing; raise it if background halos remain.</div>
+      </div>
+      <button id="runBtn" class="primary">Remove Background</button>
+    </section>
+
+    <section id="progressPanel" class="panel" hidden>
+      <div class="progress-track"><div id="progressBar" class="progress-fill"></div></div>
+      <div class="progress-row">
+        <span id="statusText">Working…</span>
+        <button id="cancelBtn" class="ghost">Cancel</button>
+      </div>
+    </section>
+
+    <section id="previewSection" class="previews" hidden>
+      <div class="preview-card">
+        <h3>Original</h3>
+        <div class="preview-frame"><img id="originalImg" alt="Original image"></div>
+      </div>
+      <div class="preview-card">
+        <h3>Result</h3>
+        <div class="preview-frame checkerboard"><img id="resultImg" alt="Background removed"></div>
+        <button id="downloadBtn" class="primary" hidden>Download</button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Background removal runs a neural network fully in your browser (via WebAssembly/ONNX). On first use it downloads model files (roughly 45&ndash;90&nbsp;MB depending on quality) which are then cached by the browser. No image data ever leaves your device.</p>
+  </footer>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
