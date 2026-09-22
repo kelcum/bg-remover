@@ -1,12 +1,26 @@
-# Background Remover
+<p align="center"><img src="logo.svg" width="88" alt="Peel logo"></p>
 
-Removes the background from any image or animated GIF, entirely in your browser. No uploads — the neural network (ISNet, via ONNX/WebAssembly) runs on your own device.
+<h1 align="center">Peel</h1>
 
-**Live site:** https://kelcum.github.io/bg-remover/
+<p align="center">Peel the background off any image or animated GIF, right in your browser.</p>
 
-- Static images → transparent PNG or GIF
-- Animated GIFs → processed frame by frame, re-encoded as an animated GIF with the original timing preserved
-- GIF transparency is all-or-nothing per pixel (the format has no soft alpha), so there's an edge-cutoff slider to tune the threshold
+<p align="center"><b><a href="https://kelcum.github.io/bg-remover/">kelcum.github.io/bg-remover</a></b></p>
+
+---
+
+Peel removes image backgrounds with an AI model that runs entirely on your device. Images are never uploaded, there's no sign-up, and it's free.
+
+- Drop in photos, product shots or logos (JPG, PNG, WEBP, iPhone HEIC) or animated GIFs; several at once is fine
+- Drag the before/after slider to check the cutout
+- Keep the background transparent, pick a color, or blur the original for a portrait-mode look
+- Save as PNG, WEBP, JPG or GIF. Animated GIFs keep every frame and their timing.
+
+## How it works
+
+- The [IMG.LY background removal](https://github.com/imgly/background-removal-js) model runs through ONNX Runtime Web, on the GPU (WebGPU) when available and multi-threaded WebAssembly otherwise. The model downloads once (88 MB by default) and is then cached.
+- `coi-serviceworker.js` enables cross-origin isolation on GitHub Pages, which multi-threaded WebAssembly needs.
+- Animated GIFs are decoded with [gifuct-js](https://github.com/matt-way/gifuct-js), processed frame by frame, and re-encoded with [gif.js](https://github.com/jnordberg/gif.js). GIF only supports fully transparent or fully opaque pixels, so there's an edge-cutoff setting for transparent GIFs.
+- iPhone HEIC photos are decoded with [heic-to](https://github.com/hoppergee/heic-to).
 
 ## Running locally
 
@@ -14,9 +28,8 @@ Removes the background from any image or animated GIF, entirely in your browser.
 python serve.py
 ```
 
-then open `http://localhost:8743`. A local server is required (rather than opening `index.html` directly) because the app uses ES module imports. `serve.py` also sets `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy` headers, which roughly halves processing time by enabling multi-threaded WASM. The deployed site gets the same benefit via `coi-serviceworker.js`, since GitHub Pages can't set custom headers.
+Then open http://localhost:8743. `serve.py` sends the COOP/COEP headers that enable multi-threaded WebAssembly.
 
-## Notes
+## License note
 
-- First use downloads the removal model (~45–90 MB depending on the quality setting you pick); the browser caches it after that.
-- Uses [`@imgly/background-removal`](https://github.com/imgly/background-removal-js), which is AGPL-licensed.
+The background-removal library is AGPL-licensed. That's fine for this open-source site; check its terms before using it in a closed-source product.
