@@ -3,9 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Background Remover</title>
-<link rel="stylesheet" href="style.css">
+<title>Peel — free background remover</title>
+<meta name="description" content="Remove the background from photos, logos and animated GIFs. The AI runs on your device, so nothing is uploaded. Free, no sign-up.">
+<meta name="theme-color" content="#120d0c">
+<meta property="og:title" content="Peel — free background remover">
+<meta property="og:description" content="Peel the background off any image or GIF, right in your browser. Nothing is uploaded.">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
 <script src="coi-serviceworker.js"></script>
+<link rel="stylesheet" href="style.css">
 <script type="importmap">
 {
   "imports": {
@@ -16,78 +21,129 @@
 </script>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Background Remover</h1>
-    <p class="tagline">Drop an image or GIF in. It comes out with the background gone, saved as a transparent GIF (or PNG). Everything runs on your machine — nothing is uploaded anywhere.</p>
-  </header>
+<header class="top">
+  <a class="brand" href="./">
+    <img src="logo.svg" alt="" width="34" height="34">
+    <span>Peel</span>
+  </a>
+  <nav class="links">
+    <a href="https://kelcum.github.io/transmute/" target="_blank" rel="noopener">Transmute <span aria-hidden="true">↗</span></a>
+    <a href="https://github.com/kelcum/bg-remover" target="_blank" rel="noopener" aria-label="Source code on GitHub">
+      <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    </a>
+  </nav>
+</header>
 
-  <main>
-    <label id="dropzone" for="fileInput">
-      <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" hidden>
-      <div class="dz-inner">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-        <div><strong>Click to choose a file</strong> or drag one here</div>
-        <div class="dz-hint">PNG, JPG, WEBP, BMP, or GIF (animated GIFs are processed frame by frame)</div>
-      </div>
-    </label>
+<main>
+  <section class="hero">
+    <h1>Peel the background<br><span class="grad">off any image.</span></h1>
+    <p class="lede">Photos, product shots, logos, even animated GIFs. The AI runs on your device, so your images are never uploaded. Free, with no sign-up.</p>
+  </section>
 
-    <section id="options" class="panel" hidden>
-      <div class="opt-row">
-        <label for="quality">Quality
-          <select id="quality">
-            <option value="isnet_quint8" selected>Fast (smaller download, quicker per frame)</option>
-            <option value="isnet_fp16">Balanced</option>
-            <option value="isnet">Best (slowest)</option>
-          </select>
-        </label>
-        <label for="format">Save as
-          <select id="format">
-            <option value="gif" selected>GIF (transparent, matches your example)</option>
-            <option value="png">PNG (smoother edges, static images only)</option>
-          </select>
-        </label>
-        <label class="checkbox">
-          <input type="checkbox" id="gpu" checked>
-          Use GPU acceleration when available
-        </label>
-      </div>
-      <div class="opt-row" id="thresholdRow">
-        <label for="threshold" class="slider-label">
-          Edge cutoff
-          <span id="thresholdVal">128</span>
-        </label>
-        <input type="range" id="threshold" min="1" max="254" value="128">
-        <div class="dz-hint">GIF transparency is all-or-nothing per pixel (no soft edges). Lower this if too much of the subject is disappearing; raise it if background halos remain.</div>
-      </div>
-      <button id="runBtn" class="primary">Remove Background</button>
-    </section>
+  <section id="drop" class="drop">
+    <input type="file" id="fileInput" accept="image/*,.heic,.heif" multiple hidden>
+    <div class="drop-art" aria-hidden="true"><img src="logo.svg" alt="" width="56" height="56"></div>
+    <button id="pick" class="btn primary big">Choose images</button>
+    <p class="hint">or drop them anywhere · paste with Ctrl+V · JPG, PNG, WEBP, HEIC, GIF</p>
+  </section>
 
-    <section id="progressPanel" class="panel" hidden>
-      <div class="progress-track"><div id="progressBar" class="progress-fill"></div></div>
-      <div class="progress-row">
-        <span id="statusText">Working…</span>
-        <button id="cancelBtn" class="ghost">Cancel</button>
-      </div>
-    </section>
+  <div id="model" class="model" hidden>
+    <span id="modelMsg">Downloading the AI model…</span>
+    <div class="model-bar"><i id="modelBar"></i></div>
+  </div>
 
-    <section id="previewSection" class="previews" hidden>
-      <div class="preview-card">
-        <h3>Original</h3>
-        <div class="preview-frame"><img id="originalImg" alt="Original image"></div>
+  <section id="work" hidden>
+    <div class="toolbar">
+      <span id="summary" class="muted"></span>
+      <div class="tools">
+        <button id="settingsBtn" class="btn ghost" aria-expanded="false" aria-controls="settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+          Settings
+        </button>
+        <button id="clear" class="btn ghost">Clear</button>
+        <button id="dlAll" class="btn primary" disabled>Download all</button>
       </div>
-      <div class="preview-card">
-        <h3>Result</h3>
-        <div class="preview-frame checkerboard"><img id="resultImg" alt="Background removed"></div>
-        <button id="downloadBtn" class="primary" hidden>Download</button>
-      </div>
-    </section>
-  </main>
+    </div>
+    <div id="settings" class="settings" hidden>
+      <label>AI model
+        <select data-setting="model">
+          <option value="isnet_fp16">Recommended · 88 MB download</option>
+          <option value="isnet_quint8">Lite · 44 MB, rougher edges</option>
+          <option value="isnet">Max · 176 MB download</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" data-setting="gpu"> Use the GPU when available</label>
+      <label>GIF edge cutoff <span class="val" id="cutoffVal"></span>
+        <input type="range" min="20" max="235" data-setting="cutoff">
+        <small>GIFs can't have soft edges. Lower keeps more of the subject; higher trims more of the halo.</small>
+      </label>
+      <p class="muted small">New settings apply to images you add next.</p>
+    </div>
+    <div id="grid" class="grid"></div>
+  </section>
 
-  <footer>
-    <p>Background removal runs a neural network fully in your browser (via WebAssembly/ONNX). On first use it downloads model files (roughly 45&ndash;90&nbsp;MB depending on quality) which are then cached by the browser. No image data ever leaves your device.</p>
-  </footer>
-</div>
+  <section class="features">
+    <div class="feature">
+      <div class="f-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></div>
+      <h3>Private</h3>
+      <p>The AI model runs in your browser. Your photos never touch a server.</p>
+    </div>
+    <div class="feature">
+      <div class="f-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15l3-3 2 2 3-4 2 3"/><circle cx="8.5" cy="9" r="1"/></svg></div>
+      <h3>Animated GIFs too</h3>
+      <p>Every frame gets cut out, and the result is still an animated GIF with the original timing.</p>
+    </div>
+    <div class="feature">
+      <div class="f-ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18z" fill="currentColor"/></svg></div>
+      <h3>Any background</h3>
+      <p>Keep it transparent, pick a color, or blur the original for a portrait-mode look.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p><img src="logo.svg" alt="" width="18" height="18"> Peel runs entirely in your browser, using the open-source <a href="https://github.com/imgly/background-removal-js" target="_blank" rel="noopener">IMG.LY background removal</a> model. Also try <a href="https://kelcum.github.io/transmute/" target="_blank" rel="noopener">Transmute</a>, a free file converter.</p>
+</footer>
+
+<div id="overlay" class="overlay" hidden><div>Drop to peel</div></div>
+
+<template id="cardTpl">
+  <article class="card" data-state="queued">
+    <div class="stage">
+      <div class="cmp">
+        <div class="cmp-bg"></div>
+        <img class="cmp-after" alt="Result">
+        <img class="cmp-before" alt="Original">
+        <div class="cmp-bar" aria-hidden="true"><span></span></div>
+        <input type="range" class="cmp-range" min="0" max="100" value="50" aria-label="Compare original and result">
+      </div>
+      <div class="busy">
+        <span class="busy-msg">Waiting…</span>
+        <div class="busy-bar"><i></i></div>
+      </div>
+    </div>
+    <div class="foot-row">
+      <div class="title"><span class="name"></span><span class="meta"></span></div>
+      <button class="rm" aria-label="Remove image">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="opts">
+      <div class="swatches" role="radiogroup" aria-label="Background">
+        <button class="sw sw-clear" data-bg="transparent" role="radio" title="Transparent" aria-label="Transparent"></button>
+        <button class="sw" data-bg="#ffffff" role="radio" title="White" aria-label="White" style="--c:#ffffff"></button>
+        <button class="sw" data-bg="#000000" role="radio" title="Black" aria-label="Black" style="--c:#000000"></button>
+        <label class="sw sw-pick" title="Pick a color"><input type="color" value="#3b82f6" aria-label="Custom color"></label>
+        <button class="sw sw-blur" data-bg="blur" role="radio" title="Blurred original" aria-label="Blurred original"></button>
+      </div>
+      <div class="dl-row">
+        <select class="fmt" aria-label="Format"></select>
+        <button class="btn primary small dl">Download</button>
+      </div>
+    </div>
+  </article>
+</template>
+
 <script type="module" src="app.js"></script>
 </body>
 </html>
