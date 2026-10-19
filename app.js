@@ -15,16 +15,12 @@ const getGifWorker = lazy(async () => {
     s.onerror = () => reject(new Error("Couldn't load the GIF encoder."));
     document.head.append(s);
   });
-  // Workers can't be created from a cross-origin URL, so run the CDN script from a same-origin blob.
   const src = await (await fetch(CDN + "gif.js@0.2.0/dist/gif.worker.js")).text();
   return URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
 });
 
 class UserError extends Error {}
 
-// ---------- settings ----------
-// fp16 costs a bigger one-time download than the quantized model but runs just as fast
-// and leaves far fewer stray specks in the background.
 const DEFAULTS = { model: "isnet_fp16", gpu: true, cutoff: 128 };
 const settings = (() => {
   try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem("peel.settings") || "{}") }; }
@@ -50,8 +46,6 @@ $("#settingsBtn").addEventListener("click", () => {
   $("#settingsBtn").setAttribute("aria-expanded", String(!panel.hidden));
 });
 
-// ---------- model ----------
-// The library memoizes its first config, so progress is reported through one global callback.
 const fetches = new Map();
 let current = null;
 let bannerTimer = null;
@@ -88,11 +82,8 @@ async function cutout(blob) {
   }
 }
 
-// ---------- image helpers ----------
 const canvasBlob = (c, type = "image/png", quality) => c.convertToBlob({ type, quality });
 
-// Draws a cutout onto its own canvas and drops the faint haze (<~9% opacity) the model
-// leaves in background areas; it's invisible on its own but shows up as specks.
 async function cleanCutout(blob, w, h) {
   const bmp = await createImageBitmap(blob);
   const c = new OffscreenCanvas(w, h);
@@ -123,7 +114,6 @@ function paintBackground(ctx, bg, source, w, h) {
   ctx.imageSmoothingQuality = "high";
   if (supportsFilter) {
     ctx.filter = `blur(${r}px)`;
-    // Overscan so the blur doesn't fade to transparent at the edges.
     ctx.drawImage(source, -r * 2, -r * 2, w + r * 4, h + r * 4);
   } else {
     const small = new OffscreenCanvas(Math.max(1, Math.round(w / r)), Math.max(1, Math.round(h / r)));
@@ -133,8 +123,6 @@ function paintBackground(ctx, bg, source, w, h) {
   ctx.restore();
 }
 
-// GIF has no alpha channel, only one "transparent" palette entry, so removed pixels
-// are painted a rare key color that gif.js maps to that entry.
 const KEY = [255, 0, 220];
 function keyOut(data, cutoff) {
   for (let i = 0; i < data.length; i += 4) {
@@ -158,7 +146,6 @@ async function encodeGif(frames, w, h, keyed) {
   });
 }
 
-// Reconstructs full frames from GIF patches by applying each frame's disposal method.
 function fullFrames(frames, w, h) {
   const comp = new OffscreenCanvas(w, h);
   const cctx = comp.getContext("2d", { willReadFrequently: true });
@@ -213,7 +200,6 @@ async function prepare(it) {
   return { kind: "still", blob, bitmap: bmp, w: bmp.width, h: bmp.height, preview: blob };
 }
 
-// ---------- items ----------
 const items = [];
 const grid = $("#grid");
 const tpl = $("#cardTpl");
@@ -416,7 +402,6 @@ function refresh() {
   $("#dlAll").disabled = done < 2;
 }
 
-// ---------- input ----------
 const fileInput = $("#fileInput");
 $("#pick").addEventListener("click", () => fileInput.click());
 fileInput.addEventListener("change", () => { addFiles([...fileInput.files]); fileInput.value = ""; });
